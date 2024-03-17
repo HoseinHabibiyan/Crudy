@@ -1,0 +1,168 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Phoenix\\Documents\\Visual Studio 2022\\Projects\\MockApi\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{65305F65-EE89-4CA9-9343-09BDF5830F37}|MockApi\\MockApi.csproj|c:\\users\\phoenix\\documents\\visual studio 2022\\projects\\mockapi\\mockapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{65305F65-EE89-4CA9-9343-09BDF5830F37}|MockApi\\MockApi.csproj|solutionrelative:mockapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{65305F65-EE89-4CA9-9343-09BDF5830F37}|MockApi\\MockApi.csproj|c:\\users\\phoenix\\documents\\visual studio 2022\\projects\\mockapi\\mockapi\\mockapi.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}",
+      "RelativeMoniker": "D:0:0:{65305F65-EE89-4CA9-9343-09BDF5830F37}|MockApi\\MockApi.csproj|solutionrelative:mockapi\\mockapi.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{65305F65-EE89-4CA9-9343-09BDF5830F37}|MockApi\\MockApi.csproj|c:\\users\\phoenix\\documents\\visual studio 2022\\projects\\mockapi\\mockapi\\util\\utility.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{65305F65-EE89-4CA9-9343-09BDF5830F37}|MockApi\\MockApi.csproj|solutionrelative:mockapi\\util\\utility.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{65305F65-EE89-4CA9-9343-09BDF5830F37}|MockApi\\MockApi.csproj|c:\\users\\phoenix\\documents\\visual studio 2022\\projects\\mockapi\\mockapi\\mockapi.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{65305F65-EE89-4CA9-9343-09BDF5830F37}|MockApi\\MockApi.csproj|solutionrelative:mockapi\\mockapi.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 22,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:130:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:132:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:133:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:131:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:134:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:133:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:136:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:135:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:137:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:139:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:138:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{0174dea2-fdbe-4ef1-8f99-c0beae78880f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{e506b91c-c606-466a-90a9-123d1d1e12b3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:131:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:130:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Utility.cs",
+              "DocumentMoniker": "C:\\Users\\Phoenix\\Documents\\Visual Studio 2022\\Projects\\MockApi\\MockApi\\Util\\Utility.cs",
+              "RelativeDocumentMoniker": "MockApi\\Util\\Utility.cs",
+              "ToolTip": "C:\\Users\\Phoenix\\Documents\\Visual Studio 2022\\Projects\\MockApi\\MockApi\\Util\\Utility.cs",
+              "RelativeToolTip": "MockApi\\Util\\Utility.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAIAAAARAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-03-17T22:27:15.803Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "MockApi",
+              "DocumentMoniker": "C:\\Users\\Phoenix\\Documents\\Visual Studio 2022\\Projects\\MockApi\\MockApi\\MockApi.csproj",
+              "RelativeDocumentMoniker": "MockApi\\MockApi.csproj",
+              "ToolTip": "C:\\Users\\Phoenix\\Documents\\Visual Studio 2022\\Projects\\MockApi\\MockApi\\MockApi.csproj",
+              "RelativeToolTip": "MockApi\\MockApi.csproj",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2024-03-17T22:27:07.039Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\Phoenix\\Documents\\Visual Studio 2022\\Projects\\MockApi\\MockApi\\Program.cs",
+              "RelativeDocumentMoniker": "MockApi\\Program.cs",
+              "ToolTip": "C:\\Users\\Phoenix\\Documents\\Visual Studio 2022\\Projects\\MockApi\\MockApi\\Program.cs",
+              "RelativeToolTip": "MockApi\\Program.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAIAAAAAdAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-03-17T22:26:53.584Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MockApi.http",
+              "DocumentMoniker": "C:\\Users\\Phoenix\\Documents\\Visual Studio 2022\\Projects\\MockApi\\MockApi\\MockApi.http",
+              "RelativeDocumentMoniker": "MockApi\\MockApi.http",
+              "ToolTip": "C:\\Users\\Phoenix\\Documents\\Visual Studio 2022\\Projects\\MockApi\\MockApi\\MockApi.http",
+              "RelativeToolTip": "MockApi\\MockApi.http",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAYAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003502|",
+              "WhenOpened": "2024-03-17T22:26:23.754Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
