@@ -1,6 +1,6 @@
 @Crudy_HostAddress = http://localhost:5259
 
-GET {{Crudy_HostAddress}}/weatherforecast/
+GET {{Crudy_HostAddress}}/
 Accept: application/json
 
 ###

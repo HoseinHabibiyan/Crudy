@@ -1,10 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
-
+﻿
 namespace Crudy.Documents
 {
-    public class UserDocument(string email)
+    public class UserDocument(string id,string email)
     {
-        public string Id { get; set; }
+        public string Id { get; set; } = id;
         public string Email { get; set; } = email;
         public string Password { get; set; } = string.Empty;
         public string? FirstName { get; set; }

@@ -4,6 +4,7 @@ using Crudy.Util;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace Crudy.Identity;
 
@@ -30,7 +31,7 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
             throw new BadHttpRequestException("Email or password is incorrect");
         }
 
-        var result = tokenService.Authenticate([], DateTime.Now.AddMonths(1));
+        var result = tokenService.Authenticate([new Claim(ClaimTypes.NameIdentifier, user.Id)], DateTime.Now.AddMonths(1));
 
         return result.Token;
     }
@@ -42,7 +43,7 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
             throw new BadHttpRequestException("Email format is incorrect");
         }
 
-        var user = new UserDocument(model.Email.ToLower().Trim());
+        var user = new UserDocument(Guid.NewGuid().ToString(),model.Email.ToLower().Trim());
 
         user.Password = PasswordHasher.HashPassword(model.Password);
 
