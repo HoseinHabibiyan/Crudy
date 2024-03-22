@@ -10,9 +10,7 @@ using Crudy.Identity.Models;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Crudy.Documents;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,6 +53,21 @@ builder.Services.AddSwaggerGen(c =>
 });
 #endregion
 
+#region Rate Limiter
+
+builder.Services.AddRateLimiter(options => {
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("Fixed", opt => {
+        opt.Window = TimeSpan.FromSeconds(10);
+        opt.PermitLimit = 100;
+    });
+});
+
+const string rateLimitPolicy = "Fixed";
+
+#endregion
+
+
 builder.Services.AddRavenDbAsyncSession();
 builder.Services.AddRavenDbDocStore();
 
@@ -73,6 +86,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 
 #region Identity
@@ -97,6 +111,7 @@ app.MapPost("/Change-password", (ChangePasswordModel model, AuthService authServ
 .RequireAuthorization();
 
 #endregion
+
 
 
 app.MapPost("/{route}", async (string route, IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
@@ -145,7 +160,8 @@ app.MapPost("/{route}", async (string route, IAsyncDocumentSession session, Http
     await session.SaveChangesAsync(cancellationToken);
     return id;
 })
-.WithOpenApi();
+.WithOpenApi()
+.RequireRateLimiting(rateLimitPolicy);
 
 app.MapGet("/{route}/{page}/{pageSize}", async (string route, int page, int pageSize, IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
 {
@@ -175,7 +191,8 @@ app.MapGet("/{route}/{page}/{pageSize}", async (string route, int page, int page
         TotalCount = await query.CountAsync(cancellationToken)
     };
 })
-.WithOpenApi();
+.WithOpenApi()
+.RequireRateLimiting(rateLimitPolicy);
 
 app.MapGet("/{route}/{id}", async Task<Results<Ok<Dictionary<string, object>>, NotFound>> (string route, string id, IAsyncDocumentSession session, HttpContext context) =>
 {
@@ -199,7 +216,8 @@ app.MapGet("/{route}/{id}", async Task<Results<Ok<Dictionary<string, object>>, N
 
     return item is null ? TypedResults.NotFound() : TypedResults.Ok(item.Data);
 })
-.WithOpenApi();
+.WithOpenApi()
+.RequireRateLimiting(rateLimitPolicy);
 
 app.MapPut("/{route}/{id}", async Task<Results<Ok, NotFound>> (string route, string id, HttpContext context, IAsyncDocumentSession session) =>
 {
@@ -253,7 +271,8 @@ app.MapPut("/{route}/{id}", async Task<Results<Ok, NotFound>> (string route, str
 
     return TypedResults.Ok();
 })
-.WithOpenApi();
+.WithOpenApi()
+.RequireRateLimiting(rateLimitPolicy);
 
 app.MapDelete("/{route}/{id}", async Task<Results<Ok, NotFound>> (string id, string route, IAsyncDocumentSession session, HttpContext context) =>
 {
@@ -282,7 +301,8 @@ app.MapDelete("/{route}/{id}", async Task<Results<Ok, NotFound>> (string id, str
 
     return TypedResults.Ok();
 })
-.WithOpenApi();
+.WithOpenApi()
+.RequireRateLimiting(rateLimitPolicy);
 
 app.Run();
 
