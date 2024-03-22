@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace MockApi.Util
+namespace Crudy.Util
 {
     public static class Utility
     {

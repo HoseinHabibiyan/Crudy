@@ -3,13 +3,13 @@ using Newtonsoft.Json;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using Raven.Client.Exceptions;
-using MockApi.Util;
+using Crudy.Util;
 using Raven.DependencyInjection;
-using MockApi.Identity;
-using MockApi.Identity.Models;
+using Crudy.Identity;
+using Crudy.Identity.Models;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using MockApi.Documents;
+using Crudy.Documents;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 
-namespace MockApi.Util
+namespace Crudy.Util
 {
     public static class PasswordHasher
     {

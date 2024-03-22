@@ -1,4 +1,4 @@
-﻿namespace MockApi.Identity.Models;
+﻿namespace Crudy.Identity.Models;
 
 public class AuthTokenModel
 {

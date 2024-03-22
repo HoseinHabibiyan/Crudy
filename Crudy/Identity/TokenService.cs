@@ -3,9 +3,9 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using MockApi.Identity.Models;
+using Crudy.Identity.Models;
 
-namespace MockApi.Identity;
+namespace Crudy.Identity;
 
 public class TokenService 
 {

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
-namespace MockApi.Identity;
+namespace Crudy.Identity;
 
 public static class JwtConfiguration
 {

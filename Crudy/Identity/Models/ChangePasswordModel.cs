@@ -1,4 +1,4 @@
-﻿namespace MockApi.Identity.Models
+﻿namespace Crudy.Identity.Models
 {
     public record ChangePasswordModel(string Email, string Password, string NewPassword, string RepeatPassword);
 }

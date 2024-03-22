@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MockApi.Documents
+namespace Crudy.Documents
 {
     public class UserDocument(string email)
     {
