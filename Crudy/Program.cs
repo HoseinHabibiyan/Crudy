@@ -11,6 +11,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Crudy.Documents;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Dynamic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,9 +56,11 @@ builder.Services.AddSwaggerGen(c =>
 
 #region Rate Limiter
 
-builder.Services.AddRateLimiter(options => {
+builder.Services.AddRateLimiter(options =>
+{
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddFixedWindowLimiter("Fixed", opt => {
+    options.AddFixedWindowLimiter("Fixed", opt =>
+    {
         opt.Window = TimeSpan.FromSeconds(10);
         opt.PermitLimit = 100;
     });
@@ -67,6 +70,20 @@ const string rateLimitPolicy = "Fixed";
 
 #endregion
 
+#region CORS
+
+builder.Services.AddCors(policy =>
+{
+    policy.AddPolicy("CORSPolicy",
+        builder => builder
+         .AllowAnyMethod()
+         .AllowAnyHeader()
+         .SetIsOriginAllowed((host) => true)
+         .AllowCredentials()
+         );
+});
+
+#endregion
 
 builder.Services.AddRavenDbAsyncSession();
 builder.Services.AddRavenDbDocStore();
@@ -81,6 +98,8 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CRUDY");
     });
 }
+
+app.UseCors("CORSPolicy");
 
 app.UseHttpsRedirection();
 
@@ -167,7 +186,7 @@ app.MapGet("/{route}/{page}/{pageSize}", async (string route, int page, int page
 {
     string? userId = context.Request.HttpContext.GetUserId();
 
-    var query = session.Query<DataDocument>()
+    var query = session.Query<QueryDataDocument>(collectionName: "DataDocuments")
                        .Where(x => x.Route == route.ToLower().Trim())
                        .AsQueryable();
 
@@ -185,6 +204,7 @@ app.MapGet("/{route}/{page}/{pageSize}", async (string route, int page, int page
                               .Skip((page - 1) * pageSize)
                               .Take(pageSize)
                               .ToListAsync(cancellationToken);
+
     return new
     {
         Data = model,
@@ -194,12 +214,12 @@ app.MapGet("/{route}/{page}/{pageSize}", async (string route, int page, int page
 .WithOpenApi()
 .RequireRateLimiting(rateLimitPolicy);
 
-app.MapGet("/{route}/{id}", async Task<Results<Ok<Dictionary<string, object>>, NotFound>> (string route, string id, IAsyncDocumentSession session, HttpContext context) =>
+app.MapGet("/{route}/{id}", async Task<Results<Ok<ExpandoObject>, NotFound>> (string route, string id, IAsyncDocumentSession session, HttpContext context) =>
 {
     string? userId = context.Request.HttpContext.GetUserId();
 
-    var query = session.Query<DataDocument>()
-                       .Where(x => x.Route == route.ToLower().Trim() && x.Data["_id"].ToString() == id)
+    var query = session.Query<QueryDataDocument>(collectionName: "DataDocuments")
+                       .Where(x => x.Route == route.ToLower().Trim() && x.Id == id)
                        .AsQueryable();
 
     if (userId is not null)
