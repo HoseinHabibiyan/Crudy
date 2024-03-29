@@ -5,8 +5,7 @@ namespace Crudy.Documents;
 public abstract class BaseDataDocument
 {
     public string Id { get; set; } = default!;
-    public string? UserId { get; set; }
-    public required string IPAddress { get; set; }
+    public required string TokenId { get; set; }
     public required string Route { get; set; }
 }
 

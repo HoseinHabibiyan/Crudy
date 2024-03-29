@@ -1,6 +1,14 @@
-@Crudy_HostAddress = http://localhost:5259
+@Crudy_HostAddress = https://localhost:6120
 
 GET {{Crudy_HostAddress}}/
 Accept: application/json
+
+###
+
+GET {{Crudy_HostAddress}}/api/{token}/{route}/{id}
+
+###
+
+PUT {{Crudy_HostAddress}}/api/{token}/{route}/{id}
 
 ###

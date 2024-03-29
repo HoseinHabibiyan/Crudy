@@ -1,4 +1,5 @@
-﻿using System.Dynamic;
+﻿using Newtonsoft.Json.Linq;
+using System.Dynamic;
 using System.Net;
 using System.Text.Json;
 
@@ -28,6 +29,11 @@ namespace Crudy.Util
                 default:
                     return false;
             }
+        }
+
+        public static bool IsValidGuid(this string token, string format = "N")
+        {
+           return Guid.TryParseExact(token, format, out Guid guidToken);
         }
     }
 }

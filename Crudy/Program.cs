@@ -12,6 +12,10 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Crudy.Documents;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Dynamic;
+using Newtonsoft.Json.Linq;
+using System.Threading;
+using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,7 +78,7 @@ const string rateLimitPolicy = "Fixed";
 
 builder.Services.AddCors(policy =>
 {
-    policy.AddPolicy("CORSPolicy",
+    policy.AddPolicy("ApiCORSPolicy",
         builder => builder
          .AllowAnyMethod()
          .AllowAnyHeader()
@@ -99,7 +103,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseCors("CORSPolicy");
+app.UseCors("ApiCORSPolicy");
 
 app.UseHttpsRedirection();
 
@@ -131,15 +135,61 @@ app.MapPost("/Change-password", (ChangePasswordModel model, AuthService authServ
 
 #endregion
 
-
-
-app.MapPost("/{route}", async (string route, IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
+app.MapGet("/api/generate-token", async Task<Results<Ok<string>, NotFound>> (IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
 {
+    string? userId = context.GetUserId();
+    bool tokenAlreadyExist = await session.Query<TokenDocument>().Where(x => x.UserId == userId).AnyAsync(cancellationToken);
+
+    if (tokenAlreadyExist)
+        throw new BadRequestException("Your token already created");
+
+    var ipAddress = context.Request.HttpContext.Connection.RemoteIpAddress;
+    var token = new TokenDocument()
+    {
+        UserId = userId,
+        IPAddress = ipAddress.ToString(),
+        Token = Guid.NewGuid().ToString("N"),
+        ExpirationDate = null
+    };
+    await session.StoreAsync(token, cancellationToken);
+    await session.SaveChangesAsync(cancellationToken);
+
+    return TypedResults.Ok(token.Token);
+})
+.WithOpenApi()
+.RequireAuthorization()
+.RequireRateLimiting(rateLimitPolicy);
+
+app.MapPost("/api/{token}/{route}", async (string token, string route, IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
+{
+    if (!token.IsValidGuid())
+        throw new BadHttpRequestException("Token is not Valid");
+
+    var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
+
+    if (tokenDoc is null)
+    {
+        var ipAddress = context.Request.HttpContext.Connection.RemoteIpAddress;
+        if (ipAddress is null)
+            throw new UnauthorizedAccessException();
+
+        tokenDoc = new TokenDocument()
+        {
+            IPAddress = ipAddress.ToString(),
+            Token = token,
+        };
+        await session.StoreAsync(tokenDoc, cancellationToken);
+        await session.SaveChangesAsync(cancellationToken);
+    }
+
+    if (tokenDoc.ExpirationDate < DateTimeOffset.Now)
+        throw new UnauthorizedAccessException("Token is expired");
+
     string input = default!;
 
     using (var bodyReader = new StreamReader(context.Request.Body))
     {
-        input = await bodyReader.ReadToEndAsync();
+        input = await bodyReader.ReadToEndAsync(cancellationToken);
     }
 
     int inputSize = input.Length * sizeof(Char);
@@ -164,15 +214,13 @@ app.MapPost("/{route}", async (string route, IAsyncDocumentSession session, Http
 
     dic = dic.Union(data).ToDictionary();
 
-    var ipAddress = context.Request.HttpContext.Connection.RemoteIpAddress;
 
     var document = new DataDocument
     {
         Id = id,
+        TokenId = tokenDoc.Id,
         Route = route.ToLower().Trim(),
         Data = dic,
-        IPAddress = ipAddress?.ToString() ?? string.Empty,
-        UserId = context.Request.HttpContext.GetUserId(),
     };
 
     await session.StoreAsync(document, cancellationToken);
@@ -182,23 +230,23 @@ app.MapPost("/{route}", async (string route, IAsyncDocumentSession session, Http
 .WithOpenApi()
 .RequireRateLimiting(rateLimitPolicy);
 
-app.MapGet("/{route}/{page}/{pageSize}", async (string route, int page, int pageSize, IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
+app.MapGet("/api/{token}/{route}/{page}/{pageSize}", async (string token, string route, int page, int pageSize, IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
 {
-    string? userId = context.Request.HttpContext.GetUserId();
+    if (!token.IsValidGuid())
+        throw new BadHttpRequestException("Token is not Valid");
+
+    var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
+
+    if (tokenDoc is null)
+        throw new UnauthorizedAccessException("Token is not valid");
+
+    if (tokenDoc.ExpirationDate < DateTimeOffset.Now)
+        throw new Exception("Token is expired");
+
 
     var query = session.Query<QueryDataDocument>(collectionName: "DataDocuments")
-                       .Where(x => x.Route == route.ToLower().Trim())
+                       .Where(x => x.Route == route.ToLower().Trim() && x.TokenId == tokenDoc.Id)
                        .AsQueryable();
-
-    if (userId is not null)
-    {
-        query = query.Where(x => x.UserId == userId);
-    }
-    else
-    {
-        string? ipAddress = context.Request.HttpContext.Connection.RemoteIpAddress?.ToString();
-        query = query.Where(x => x.IPAddress == ipAddress);
-    }
 
     var model = await query.Select(x => x.Data)
                               .Skip((page - 1) * pageSize)
@@ -214,38 +262,48 @@ app.MapGet("/{route}/{page}/{pageSize}", async (string route, int page, int page
 .WithOpenApi()
 .RequireRateLimiting(rateLimitPolicy);
 
-app.MapGet("/{route}/{id}", async Task<Results<Ok<ExpandoObject>, NotFound>> (string route, string id, IAsyncDocumentSession session, HttpContext context) =>
+app.MapGet("/api/{token}/{route}/{id}", async Task<Results<Ok<ExpandoObject>, NotFound>> (string token, string route, string id, IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
 {
-    string? userId = context.Request.HttpContext.GetUserId();
+    if (!token.IsValidGuid())
+        throw new BadHttpRequestException("Token is not Valid");
+
+    var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
+
+    if (tokenDoc is null)
+        throw new Exception("Token is not valid");
+
+    if (tokenDoc.ExpirationDate > DateTimeOffset.Now)
+        throw new Exception("Token is expired");
 
     var query = session.Query<QueryDataDocument>(collectionName: "DataDocuments")
-                       .Where(x => x.Route == route.ToLower().Trim() && x.Id == id)
+                       .Where(x => x.Route == route.ToLower().Trim() && x.Id == id && x.TokenId == tokenDoc.Id)
                        .AsQueryable();
 
-    if (userId is not null)
-    {
-        query = query.Where(x => x.UserId == userId);
-    }
-    else
-    {
-        string? ipAddress = context.Request.HttpContext.Connection.RemoteIpAddress?.ToString();
-        query = query.Where(x => x.IPAddress == ipAddress);
-    }
-
-    var item = await query.FirstOrDefaultAsync();
+    var item = await query.FirstOrDefaultAsync(cancellationToken);
 
     return item is null ? TypedResults.NotFound() : TypedResults.Ok(item.Data);
 })
 .WithOpenApi()
 .RequireRateLimiting(rateLimitPolicy);
 
-app.MapPut("/{route}/{id}", async Task<Results<Ok, NotFound>> (string route, string id, HttpContext context, IAsyncDocumentSession session) =>
+app.MapPut("/api/{token}/{route}/{id}", async Task<Results<Ok, NotFound>> (string token, string route, string id, HttpContext context, IAsyncDocumentSession session, CancellationToken cancellationToken) =>
 {
+    if (!token.IsValidGuid())
+        throw new BadHttpRequestException("Token is not Valid");
+
+    var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
+
+    if (tokenDoc is null)
+        throw new Exception("Token is not valid");
+
+    if (tokenDoc.ExpirationDate > DateTimeOffset.Now)
+        throw new Exception("Token is expired");
+
     string input = default!;
 
     using (var bodyReader = new StreamReader(context.Request.Body))
     {
-        input = await bodyReader.ReadToEndAsync();
+        input = await bodyReader.ReadToEndAsync(cancellationToken);
     }
 
     int inputSize = input.Length * sizeof(Char);
@@ -259,20 +317,10 @@ app.MapPut("/{route}/{id}", async Task<Results<Ok, NotFound>> (string route, str
     string? userId = context.Request.HttpContext.GetUserId();
 
     var query = session.Query<DataDocument>()
-                       .Where(x => x.Route == route.ToLower().Trim() && x.Data["_id"].ToString() == id)
+                       .Where(x => x.Route == route.ToLower().Trim() && x.Data["_id"].ToString() == id && x.TokenId == tokenDoc.Id)
                        .AsQueryable();
 
-    if (userId is not null)
-    {
-        query = query.Where(x => x.UserId == userId);
-    }
-    else
-    {
-        string? ipAddress = context.Request.HttpContext.Connection.RemoteIpAddress?.ToString();
-        query = query.Where(x => x.IPAddress == ipAddress);
-    }
-
-    var item = await query.FirstOrDefaultAsync();
+    var item = await query.FirstOrDefaultAsync(cancellationToken);
 
     var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(input);
 
@@ -286,38 +334,39 @@ app.MapPut("/{route}/{id}", async Task<Results<Ok, NotFound>> (string route, str
         item.Data[element.Key] = element.Value;
     });
 
-    await session.StoreAsync(item);
-    await session.SaveChangesAsync();
+    await session.StoreAsync(item, cancellationToken);
+    await session.SaveChangesAsync(cancellationToken);
 
     return TypedResults.Ok();
 })
 .WithOpenApi()
 .RequireRateLimiting(rateLimitPolicy);
 
-app.MapDelete("/{route}/{id}", async Task<Results<Ok, NotFound>> (string id, string route, IAsyncDocumentSession session, HttpContext context) =>
+app.MapDelete("/api/{token}/{route}/{id}", async Task<Results<Ok, NotFound>> (string token, string id, string route, IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
 {
+    if (!token.IsValidGuid())
+        throw new BadHttpRequestException("Token is not Valid");
+
+    var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
+
+    if (tokenDoc is null)
+        throw new Exception("Token is not valid");
+
+    if (tokenDoc.ExpirationDate > DateTimeOffset.Now)
+        throw new Exception("Token is expired");
+
     string? userId = context.Request.HttpContext.GetUserId();
 
     var query = session.Query<DataDocument>()
-                       .Where(x => x.Route == route.ToLower().Trim() && x.Data["_id"].ToString() == id)
+                       .Where(x => x.Route == route.ToLower().Trim() && x.Data["_id"].ToString() == id && x.TokenId == tokenDoc.Id)
                        .AsQueryable();
 
-    if (userId is not null)
-    {
-        query = query.Where(x => x.UserId == userId);
-    }
-    else
-    {
-        string? ipAddress = context.Request.HttpContext.Connection.RemoteIpAddress?.ToString();
-        query = query.Where(x => x.IPAddress == ipAddress);
-    }
-
-    var item = await query.FirstOrDefaultAsync();
+    var item = await query.FirstOrDefaultAsync(cancellationToken);
 
     if (item is null) return TypedResults.NotFound();
 
     session.Delete(item);
-    await session.SaveChangesAsync();
+    await session.SaveChangesAsync(cancellationToken);
 
     return TypedResults.Ok();
 })
