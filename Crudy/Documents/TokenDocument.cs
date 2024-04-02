@@ -8,6 +8,7 @@
         public required string IPAddress { get; set; }
         public DateTimeOffset? ExpirationDate { get; set; } = DateTimeOffset.Now.AddDays(1);
         public DateTimeOffset CreatedDate { get; set; } = DateTimeOffset.Now;
+        public int ResourceCount { get; set; }
 
     }
 }
