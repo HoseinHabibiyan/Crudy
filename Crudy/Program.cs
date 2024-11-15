@@ -13,6 +13,8 @@ using Crudy.Documents;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Dynamic;
 using Crudy;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,7 +54,7 @@ builder.Services.AddSwaggerGen(c =>
                                     Id = "Bearer"
                                 }
                             },
-                            new string[] { }
+                            []
                         }
                     });
 });
@@ -94,14 +96,14 @@ builder.Services.AddRavenDbDocStore();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
+// if (app.Environment.IsDevelopment())
+// {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CRUDY");
     });
-}
+// }
 
 app.UseCors("CORSPolicy");
 
@@ -115,40 +117,34 @@ app.UseExceptionHandler();
 #region Identity
 
 app.MapPost("/Login", (LoginModel model, AuthService authService, HttpContext context, CancellationToken cancellationToken) =>
-{
-    return authService.Login(model, cancellationToken);
-})
+        authService.Login(model, cancellationToken))
 .WithOpenApi();
 
-app.MapPost("/Register", (RegisterModel model, AuthService authService, CancellationToken cancellationToken) =>
-{
-    return authService.Register(model, cancellationToken);
-})
+app.MapPost("/Register", (RegisterModel model, AuthService authService, CancellationToken cancellationToken) => 
+        authService.Register(model, cancellationToken))
 .WithOpenApi();
 
 app.MapPost("/Change-password", (ChangePasswordModel model, AuthService authService, CancellationToken cancellationToken) =>
-{
-    return authService.ChangePassword(model, cancellationToken);
-})
+        authService.ChangePassword(model, cancellationToken))
 .WithOpenApi()
 .RequireAuthorization();
 
 #endregion
 
-app.MapGet("/api/generate-token", async Task<Results<Ok<string>, NotFound>> (IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
+app.MapGet("/api/token", async Task<Results<Ok<string>, NotFound>> (IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
 {
     string? userId = context.GetUserId();
-    bool tokenAlreadyExist = await session.Query<TokenDocument>().Where(x => x.UserId == userId).AnyAsync(cancellationToken);
+    var token = await session.Query<TokenDocument>().Where(x => x.UserId == userId).FirstOrDefaultAsync(cancellationToken);
 
-    if (tokenAlreadyExist)
-        throw new BadRequestException("Your token already created");
+    if (token is not null)
+        return TypedResults.Ok(token.Token);
 
     var ipAddress = context.Request.HttpContext.Connection.RemoteIpAddress;
 
     if (ipAddress is null)
         throw new UnauthorizedAccessException();
-
-    var token = new TokenDocument()
+    
+    token = new TokenDocument()
     {
         Id = Guid.NewGuid().ToString(),
         UserId = userId,
@@ -165,7 +161,7 @@ app.MapGet("/api/generate-token", async Task<Results<Ok<string>, NotFound>> (IAs
 .RequireAuthorization()
 .RequireRateLimiting(rateLimitPolicy);
 
-app.MapPost("/api/{token}/{route}", async (string token, string route, IAsyncDocumentSession session, HttpContext context, IConfiguration configuration, CancellationToken cancellationToken) =>
+app.MapPost("/api/{token}/{route}", async (string token, string route,IAsyncDocumentSession session, HttpContext context, IConfiguration configuration, CancellationToken cancellationToken) =>
 {
     var ipAddress = context.Request.HttpContext.Connection.RemoteIpAddress;
     if (ipAddress is null)
@@ -193,7 +189,7 @@ app.MapPost("/api/{token}/{route}", async (string token, string route, IAsyncDoc
 
         if (tokenDoc.ResourceCount is 5)
         {
-            throw new BadHttpRequestException("You can only store 5 resource in test. please signup to store unlimit.");
+            throw new BadRequestException("You can only store 5 resource in test. please signup to store unlimit.");
         }
     }
     else
@@ -217,15 +213,15 @@ app.MapPost("/api/{token}/{route}", async (string token, string route, IAsyncDoc
     int inputSize = input.Length * sizeof(Char);
 
     if (inputSize > 50000)
-        throw new BadHttpRequestException("Input size is too large");
+        throw new BadRequestException("Input size is too large");
 
     if (!input.IsJsonValid())
-        throw new BadHttpRequestException("Json is not valid");
+        throw new BadRequestException("Json is not valid");
 
     var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(input);
 
     if (data is null)
-        throw new BadHttpRequestException($"input body is not valid");
+        throw new BadRequestException($"input body is not valid");
 
     string id = Guid.NewGuid().ToString();
 
@@ -257,7 +253,7 @@ app.MapPost("/api/{token}/{route}", async (string token, string route, IAsyncDoc
 app.MapGet("/api/{token}/{route}/{page = 1}/{pageSize = 10}", async (IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken, string token, string route, int page = 1, int pageSize = 10) =>
 {
     if (!token.IsValidGuid())
-        throw new BadHttpRequestException("Token is not valid");
+        throw new BadRequestException("Token is not valid");
 
     var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
 
@@ -289,7 +285,7 @@ app.MapGet("/api/{token}/{route}/{page = 1}/{pageSize = 10}", async (IAsyncDocum
 app.MapGet("/api/{token}/{route}/{id}", async Task<Results<Ok<ExpandoObject>, NotFound>> (string token, string route, string id, IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
 {
     if (!token.IsValidGuid())
-        throw new BadHttpRequestException("Token is not valid");
+        throw new BadRequestException("Token is not valid");
 
     var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
 
@@ -313,7 +309,7 @@ app.MapGet("/api/{token}/{route}/{id}", async Task<Results<Ok<ExpandoObject>, No
 app.MapPut("/api/{token}/{route}/{id}", async Task<Results<Ok, NotFound>> (string token, string route, string id, HttpContext context, IAsyncDocumentSession session, CancellationToken cancellationToken) =>
 {
     if (!token.IsValidGuid())
-        throw new BadHttpRequestException("Token is not Valid");
+        throw new BadRequestException("Token is not Valid");
 
     var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
 
@@ -336,7 +332,7 @@ app.MapPut("/api/{token}/{route}/{id}", async Task<Results<Ok, NotFound>> (strin
         throw new BadRequestException("Input size is too large");
 
     if (!input.IsJsonValid())
-        throw new BadHttpRequestException("input body is not valid");
+        throw new BadRequestException("input body is not valid");
 
     string? userId = context.Request.HttpContext.GetUserId();
 
@@ -349,7 +345,7 @@ app.MapPut("/api/{token}/{route}/{id}", async Task<Results<Ok, NotFound>> (strin
     var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(input);
 
     if (data is null)
-        throw new BadHttpRequestException($"input body is not valid!");
+        throw new BadRequestException($"input body is not valid!");
 
     if (item is null) return TypedResults.NotFound();
 
@@ -369,7 +365,7 @@ app.MapPut("/api/{token}/{route}/{id}", async Task<Results<Ok, NotFound>> (strin
 app.MapDelete("/api/{token}/{route}/{id}", async Task<Results<Ok, NotFound>> (string token, string id, string route, IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
 {
     if (!token.IsValidGuid())
-        throw new BadHttpRequestException("Token is not Valid");
+        throw new BadRequestException("Token is not Valid");
 
     var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
 
