@@ -26,7 +26,7 @@ namespace Crudy
                     problemDetails.Title = "Unauthorized";
                     problemDetails.Status = StatusCodes.Status401Unauthorized;
                     break;
-                case BadHttpRequestException:
+                case BadRequestException:
                     problemDetails.Title = "Bad Request";
                     problemDetails.Status = StatusCodes.Status400BadRequest;
                     break;

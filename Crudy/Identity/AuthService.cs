@@ -5,6 +5,7 @@ using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using Raven.Client.Exceptions;
 
 namespace Crudy.Identity;
 
@@ -15,7 +16,7 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
     {
         if (!new EmailAddressAttribute().IsValid(model.Email))
         {
-            throw new BadHttpRequestException("Email format is incorrect");
+            throw new BadRequestException("Email format is incorrect");
         }
 
         string email = model.Email.ToLower().Trim();
@@ -23,12 +24,12 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
 
         if (user is null)
         {
-            throw new BadHttpRequestException("Email or password is incorrect");
+            throw new BadRequestException("Email or password is incorrect");
         }
 
         if (!PasswordHasher.VerifyHashedPassword(user.Password, model.Password))
         {
-            throw new BadHttpRequestException("Email or password is incorrect");
+            throw new BadRequestException("Email or password is incorrect");
         }
 
         var result = tokenService.Authenticate([new Claim(ClaimTypes.NameIdentifier, user.Id)], DateTime.Now.AddMonths(1));
@@ -40,7 +41,7 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
     {
         if (!new EmailAddressAttribute().IsValid(model.Email))
         {
-            throw new BadHttpRequestException("Email format is incorrect");
+            throw new BadRequestException("Email format is incorrect");
         }
 
         var user = new UserDocument(Guid.NewGuid().ToString(),model.Email.ToLower().Trim());
@@ -55,12 +56,12 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
     {
         if (!new EmailAddressAttribute().IsValid(model.Email))
         {
-            throw new BadHttpRequestException("Email format is incorrect");
+            throw new BadRequestException("Email format is incorrect");
         }
 
         if (model.NewPassword.Trim() != model.RepeatPassword.Trim())
         {
-            throw new BadHttpRequestException("New password and repeat password should be same.");
+            throw new BadRequestException("New password and repeat password should be same.");
         }
 
         string email = model.Email.ToLower().Trim();
@@ -68,12 +69,12 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
 
         if (user is null)
         {
-            throw new BadHttpRequestException("Email or password is incorrect");
+            throw new BadRequestException("Email or password is incorrect");
         }
 
         if (!PasswordHasher.VerifyHashedPassword(user.Password, model.Password))
         {
-            throw new BadHttpRequestException("Old password is incorrect");
+            throw new BadRequestException("Old password is incorrect");
         }
 
         user.Password = PasswordHasher.HashPassword(model.NewPassword);
