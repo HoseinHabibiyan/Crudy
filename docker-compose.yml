@@ -22,7 +22,7 @@ services:
     networks:
       - crudy_network
     ports:
-      - "80:5000"
+      - "5000:5000"
     environment:
       - RavenSettings:Urls:0=http://ravendb:8080
       - RAVEN_DatabaseName=crudy
