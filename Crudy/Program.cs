@@ -115,20 +115,20 @@ app.UseExceptionHandler();
 
 #region Identity
 
-app.MapPost("/login", (LoginModel model, AuthService authService, HttpContext context, CancellationToken cancellationToken) =>
+app.MapPost("/api/user/login", (LoginModel model, AuthService authService, HttpContext context, CancellationToken cancellationToken) =>
         authService.Login(model, cancellationToken))
 .WithOpenApi();
 
-app.MapPost("/register", (RegisterModel model, AuthService authService, CancellationToken cancellationToken) => 
+app.MapPost("/api/user/register", (RegisterModel model, AuthService authService, CancellationToken cancellationToken) => 
         authService.Register(model, cancellationToken))
 .WithOpenApi();
 
-app.MapPost("/change-password", (ChangePasswordModel model, AuthService authService, CancellationToken cancellationToken) =>
+app.MapPost("/api/user/change-password", (ChangePasswordModel model, AuthService authService, CancellationToken cancellationToken) =>
         authService.ChangePassword(model, cancellationToken))
 .WithOpenApi()
 .RequireAuthorization();
 
-app.MapGet("/user-info", (AuthService authService, CancellationToken cancellationToken) =>
+app.MapGet("/api/user/user-info", (AuthService authService, CancellationToken cancellationToken) =>
         authService.GetUserInfo(cancellationToken))
     .WithOpenApi()
     .RequireAuthorization();
@@ -138,17 +138,17 @@ app.MapGet("/user-info", (AuthService authService, CancellationToken cancellatio
 app.MapGet("/api/token", async Task<Results<Ok<string>, NotFound>> (IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
 {
     string? userId = context.GetUserId();
-    var token = await session.Query<TokenDocument>().Where(x => x.UserId == userId).FirstOrDefaultAsync(cancellationToken);
+    var document = await session.Query<TokenDocument>().Where(x => x.UserId == userId).FirstOrDefaultAsync(cancellationToken);
 
-    if (token is not null)
-        return TypedResults.Ok(token.Token);
+    if (document is not null)
+        return TypedResults.Ok(document.Token);
 
     var ipAddress = context.Request.HttpContext.Connection.RemoteIpAddress;
 
     if (ipAddress is null)
         throw new UnauthorizedAccessException();
     
-    token = new TokenDocument()
+    document = new TokenDocument()
     {
         Id = Guid.NewGuid().ToString(),
         UserId = userId,
@@ -156,10 +156,10 @@ app.MapGet("/api/token", async Task<Results<Ok<string>, NotFound>> (IAsyncDocume
         Token = Guid.NewGuid().ToString("N"),
         ExpirationDate = null
     };
-    await session.StoreAsync(token, cancellationToken);
+    await session.StoreAsync(document, cancellationToken);
     await session.SaveChangesAsync(cancellationToken);
 
-    return TypedResults.Ok(token.Token);
+    return TypedResults.Ok(document.Token);
 })
 .WithOpenApi()
 .RequireAuthorization()

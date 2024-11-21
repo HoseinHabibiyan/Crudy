@@ -9,7 +9,7 @@ using Raven.Client.Exceptions;
 
 namespace Crudy.Identity;
 
-public class AuthService(TokenService tokenService, IAsyncDocumentSession session , IHttpContextAccessor ContextAccessor)
+public class AuthService(TokenService tokenService, IAsyncDocumentSession session , IHttpContextAccessor contextAccessor)
 {
     public async Task<string> Login(LoginModel model, CancellationToken cancellationToken)
     {
@@ -47,9 +47,10 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
             throw new BadRequestException("Email format is incorrect");
         }
 
-        var user = new UserDocument(Guid.NewGuid().ToString(),model.Email.ToLower().Trim());
-
-        user.Password = PasswordHasher.HashPassword(model.Password);
+        var user = new UserDocument(Guid.NewGuid().ToString(),model.Email.ToLower().Trim())
+        {
+            Password = PasswordHasher.HashPassword(model.Password)
+        };
 
         await session.StoreAsync(user, cancellationToken);
         await session.SaveChangesAsync(cancellationToken);
@@ -62,7 +63,7 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
             throw new BadRequestException("New password and repeat password should be same.");
         }
 
-        string email = ContextAccessor.HttpContext!.GetUserEmail()!;
+        string email = contextAccessor.HttpContext!.GetUserEmail()!;
         var user = await session.Query<UserDocument>().Where(x => x.Email == email).FirstOrDefaultAsync(cancellationToken);
 
         if (user is null)
@@ -83,7 +84,7 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
 
     public async Task<UserInfo> GetUserInfo(CancellationToken cancellationToken)
     {
-        string email = ContextAccessor.HttpContext!.GetUserEmail()!;
+        string email = contextAccessor.HttpContext!.GetUserEmail()!;
         var user = await session.Query<UserDocument>().Where(x => x.Email == email).FirstOrDefaultAsync(cancellationToken);
         return new UserInfo(email,$"{user.FirstName} {user.LastName}".Trim(),user?.ProfileImageUrl);
     }
