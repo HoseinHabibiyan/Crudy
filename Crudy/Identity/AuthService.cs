@@ -18,8 +18,7 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
             throw new BadRequestException("Email format is incorrect");
         }
 
-        string email = model.Email.ToLower().Trim();
-        var user = await session.Query<UserDocument>().Where(x => x.Email == model.Email).FirstOrDefaultAsync(cancellationToken);
+        var user = await session.Query<UserDocument>().Where(x => x.Email.Equals(model.Email)).FirstOrDefaultAsync(cancellationToken);
 
         if (user is null)
         {
@@ -31,7 +30,12 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
             throw new BadRequestException("Email or password is incorrect");
         }
 
-        var result = tokenService.Authenticate([new Claim(ClaimTypes.NameIdentifier, user.Id)], DateTime.Now.AddMonths(1));
+        var result = tokenService.Authenticate([
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
+            new Claim("IsSuperUser", user.IsSuperUser.ToString()),
+        ], DateTime.Now.AddMonths(1));
 
         return result.Token;
     }
@@ -81,6 +85,6 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
     {
         string email = ContextAccessor.HttpContext!.GetUserEmail()!;
         var user = await session.Query<UserDocument>().Where(x => x.Email == email).FirstOrDefaultAsync(cancellationToken);
-        return new UserInfo(email,$"{user.FirstName} {user.LastName}",user?.ProfileImageUrl);
+        return new UserInfo(email,$"{user.FirstName} {user.LastName}".Trim(),user?.ProfileImageUrl);
     }
 }

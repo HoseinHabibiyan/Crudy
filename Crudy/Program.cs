@@ -13,11 +13,10 @@ using Crudy.Documents;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Dynamic;
 using Crudy;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
