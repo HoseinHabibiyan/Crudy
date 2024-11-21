@@ -116,18 +116,23 @@ app.UseExceptionHandler();
 
 #region Identity
 
-app.MapPost("/Login", (LoginModel model, AuthService authService, HttpContext context, CancellationToken cancellationToken) =>
+app.MapPost("/login", (LoginModel model, AuthService authService, HttpContext context, CancellationToken cancellationToken) =>
         authService.Login(model, cancellationToken))
 .WithOpenApi();
 
-app.MapPost("/Register", (RegisterModel model, AuthService authService, CancellationToken cancellationToken) => 
+app.MapPost("/register", (RegisterModel model, AuthService authService, CancellationToken cancellationToken) => 
         authService.Register(model, cancellationToken))
 .WithOpenApi();
 
-app.MapPost("/Change-password", (ChangePasswordModel model, AuthService authService, CancellationToken cancellationToken) =>
+app.MapPost("/change-password", (ChangePasswordModel model, AuthService authService, CancellationToken cancellationToken) =>
         authService.ChangePassword(model, cancellationToken))
 .WithOpenApi()
 .RequireAuthorization();
+
+app.MapGet("/user-info", (AuthService authService, CancellationToken cancellationToken) =>
+        authService.GetUserInfo(cancellationToken))
+    .WithOpenApi()
+    .RequireAuthorization();
 
 #endregion
 

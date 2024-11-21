@@ -9,9 +9,8 @@ using Raven.Client.Exceptions;
 
 namespace Crudy.Identity;
 
-public class AuthService(TokenService tokenService, IAsyncDocumentSession session)
+public class AuthService(TokenService tokenService, IAsyncDocumentSession session , IHttpContextAccessor ContextAccessor)
 {
-
     public async Task<string> Login(LoginModel model, CancellationToken cancellationToken)
     {
         if (!new EmailAddressAttribute().IsValid(model.Email))
@@ -54,22 +53,17 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
 
     public async Task ChangePassword(ChangePasswordModel model, CancellationToken cancellationToken)
     {
-        if (!new EmailAddressAttribute().IsValid(model.Email))
-        {
-            throw new BadRequestException("Email format is incorrect");
-        }
-
         if (model.NewPassword.Trim() != model.RepeatPassword.Trim())
         {
             throw new BadRequestException("New password and repeat password should be same.");
         }
 
-        string email = model.Email.ToLower().Trim();
+        string email = ContextAccessor.HttpContext!.GetUserEmail()!;
         var user = await session.Query<UserDocument>().Where(x => x.Email == email).FirstOrDefaultAsync(cancellationToken);
 
         if (user is null)
         {
-            throw new BadRequestException("Email or password is incorrect");
+            throw new BadRequestException("Email is incorrect");
         }
 
         if (!PasswordHasher.VerifyHashedPassword(user.Password, model.Password))
@@ -81,5 +75,12 @@ public class AuthService(TokenService tokenService, IAsyncDocumentSession sessio
 
         await session.StoreAsync(user, cancellationToken);
         await session.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<UserInfo> GetUserInfo(CancellationToken cancellationToken)
+    {
+        string email = ContextAccessor.HttpContext!.GetUserEmail()!;
+        var user = await session.Query<UserDocument>().Where(x => x.Email == email).FirstOrDefaultAsync(cancellationToken);
+        return new UserInfo(email,$"{user.FirstName} {user.LastName}",user?.ProfileImageUrl);
     }
 }
