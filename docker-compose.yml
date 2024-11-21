@@ -15,7 +15,7 @@ services:
       - crudy_network
 
   crudy:
-    image: crudy
+    image: crudy_api:latest
     container_name: crudy
     depends_on:
       - ravendb
