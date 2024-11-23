@@ -189,7 +189,7 @@ app.MapPost("/api/{token}/{route}", async (string token, string route,IAsyncDocu
                 Id = Guid.NewGuid().ToString(),
                 Token = token,
                 IPAddress = ipAddress.ToString(),
-                ExpirationDate = DateTimeOffset.Now.AddDays(1),
+                ExpirationDate = null,
             };
         }
 
@@ -266,7 +266,7 @@ app.MapGet("/api/{token}/{route}/{page = 1}/{pageSize = 10}", async (IAsyncDocum
     if (tokenDoc is null)
         throw new UnauthorizedAccessException("Token is not valid");
 
-    if (tokenDoc.ExpirationDate < DateTimeOffset.Now)
+    if (tokenDoc.ExpirationDate is not null && tokenDoc.ExpirationDate < DateTimeOffset.Now)
         throw new UnauthorizedAccessException("Token is expired");
 
 
@@ -298,7 +298,7 @@ app.MapGet("/api/{token}/{route}/{id}", async Task<Results<Ok<ExpandoObject>, No
     if (tokenDoc is null)
         throw new UnauthorizedAccessException("Token is not valid");
 
-    if (tokenDoc.ExpirationDate > DateTimeOffset.Now)
+    if (tokenDoc.ExpirationDate is not null && tokenDoc.ExpirationDate < DateTimeOffset.Now)
         throw new UnauthorizedAccessException("Token is expired");
 
     var query = session.Query<QueryDataDocument>(collectionName: "DataDocuments")
@@ -322,7 +322,7 @@ app.MapPut("/api/{token}/{route}/{id}", async Task<Results<Ok, NotFound>> (strin
     if (tokenDoc is null)
         throw new UnauthorizedAccessException("Token is not valid");
 
-    if (tokenDoc.ExpirationDate > DateTimeOffset.Now)
+    if (tokenDoc.ExpirationDate is not null && tokenDoc.ExpirationDate < DateTimeOffset.Now)
         throw new UnauthorizedAccessException("Token is expired");
 
     string input = default!;
@@ -378,7 +378,7 @@ app.MapDelete("/api/{token}/{route}/{id}", async Task<Results<Ok, NotFound>> (st
     if (tokenDoc is null)
         throw new UnauthorizedAccessException("Token is not valid");
 
-    if (tokenDoc.ExpirationDate > DateTimeOffset.Now)
+    if (tokenDoc.ExpirationDate is not null && tokenDoc.ExpirationDate < DateTimeOffset.Now)
         throw new UnauthorizedAccessException("Token is expired");
 
     string? userId = context.Request.HttpContext.GetUserId();
