@@ -135,6 +135,8 @@ app.MapGet("/api/user/user-info", (AuthService authService, CancellationToken ca
 
 #endregion
 
+const int testRequestLimit = 100;
+
 app.MapGet("/api/token", async Task<Results<Ok<string>, NotFound>> (IAsyncDocumentSession session, HttpContext context, CancellationToken cancellationToken) =>
 {
     string? userId = context.GetUserId();
@@ -191,9 +193,9 @@ app.MapPost("/api/{token}/{route}", async (string token, string route,IAsyncDocu
             };
         }
 
-        if (tokenDoc.ResourceCount is 5)
+        if (tokenDoc.ResourceCount is testRequestLimit)
         {
-            throw new BadRequestException("You can only store 5 resource in test. please signup to store unlimit.");
+            throw new BadRequestException($"You can only store {testRequestLimit} resource in test. please signup to store unlimited resources");
         }
     }
     else
