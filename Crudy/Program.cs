@@ -200,13 +200,13 @@ app.MapPost("/api/{token}/{route}", async (string token, string route,IAsyncDocu
     }
     else
     {
-        tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
+        tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token.Equals(token,StringComparison.OrdinalIgnoreCase)).FirstOrDefaultAsync(cancellationToken);
     }
 
     if (tokenDoc is null)
         throw new UnauthorizedAccessException("Token is not valid");
 
-    if (tokenDoc.ExpirationDate < DateTimeOffset.Now)
+    if (tokenDoc.ExpirationDate is not null && tokenDoc.ExpirationDate < DateTimeOffset.Now)
         throw new UnauthorizedAccessException("Token is expired");
 
     string input = default!;
@@ -261,7 +261,7 @@ app.MapGet("/api/{token}/{route}/{page = 1}/{pageSize = 10}", async (IAsyncDocum
     if (!token.IsValidGuid())
         throw new BadRequestException("Token is not valid");
 
-    var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
+    var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token.Equals(token,StringComparison.OrdinalIgnoreCase)).FirstOrDefaultAsync(cancellationToken);
 
     if (tokenDoc is null)
         throw new UnauthorizedAccessException("Token is not valid");
@@ -293,7 +293,7 @@ app.MapGet("/api/{token}/{route}/{id}", async Task<Results<Ok<ExpandoObject>, No
     if (!token.IsValidGuid())
         throw new BadRequestException("Token is not valid");
 
-    var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
+    var tokenDoc = await session.Query<TokenDocument>().Where(x =>x.Token.Equals(token,StringComparison.OrdinalIgnoreCase)).FirstOrDefaultAsync(cancellationToken);
 
     if (tokenDoc is null)
         throw new UnauthorizedAccessException("Token is not valid");
@@ -317,7 +317,7 @@ app.MapPut("/api/{token}/{route}/{id}", async Task<Results<Ok, NotFound>> (strin
     if (!token.IsValidGuid())
         throw new BadRequestException("Token is not Valid");
 
-    var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
+    var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token.Equals(token,StringComparison.OrdinalIgnoreCase)).FirstOrDefaultAsync(cancellationToken);
 
     if (tokenDoc is null)
         throw new UnauthorizedAccessException("Token is not valid");
@@ -373,7 +373,7 @@ app.MapDelete("/api/{token}/{route}/{id}", async Task<Results<Ok, NotFound>> (st
     if (!token.IsValidGuid())
         throw new BadRequestException("Token is not Valid");
 
-    var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token == token).FirstOrDefaultAsync(cancellationToken);
+    var tokenDoc = await session.Query<TokenDocument>().Where(x => x.Token.Equals(token,StringComparison.OrdinalIgnoreCase)).FirstOrDefaultAsync(cancellationToken);
 
     if (tokenDoc is null)
         throw new UnauthorizedAccessException("Token is not valid");
